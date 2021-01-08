@@ -1,0 +1,412 @@
+#include <iostream>
+#include <cstdlib>
+#include <unistd.h>
+#include <ctime>
+using namespace std;
+
+#define RESET "\033[0m"
+#define BLACK "\033[30m"			  /* Black */
+#define RED "\033[41m"				  /* Red */
+#define GREEN "\033[32m"			  /* Green */
+#define YELLOW "\033[43m"			  /* Yellow */
+#define BLUE "\033[44m"				  /* Blue */
+#define MAGENTA "\033[35m"			  /* Magenta */
+#define CYAN "\033[36m"				  /* Cyan */
+#define WHITE "\033[37m"			  /* White */
+#define BOLDBLACK "\033[1m\033[30m"	  /* Bold Black */
+#define BOLDRED "\033[1m\033[31m"	  /* Bold Red */
+#define BOLDGREEN "\033[1m\033[32m"	  /* Bold Green */
+#define BOLDYELLOW "\033[1m\033[33m"  /* Bold Yellow */
+#define BOLDBLUE "\033[1m\033[34m"	  /* Bold Blue */
+#define BOLDMAGENTA "\033[1m\033[35m" /* Bold Magenta */
+#define BOLDCYAN "\033[1m\033[36m"	  /* Bold Cyan */
+#define BOLDWHITE "\033[1m\033[37m"	  /* Bold White */
+
+
+
+#define O_COLOR YELLOW
+#define X_COLOR RED
+#define BAR_COLOR BLUE
+
+int Level=5; 
+bool provocation = false; // used to display a provocative screen
+char input[60];			  // There are 42 places to play in the board .. this array represent them
+void Board();
+float PlayOut = 0;
+float EVA = 0;
+// EVA and PlayOut are working while NegaMax Function is working .. in NegaMax's way it will
+//  definitely make any winning move as it goes deep so when this happens PlayOut increases by
+//  1 and EVA increases by 1 if its a winnning move or decreases by 1 if it the opposite
+// so we can evaluate neutral moves for MiniMax by dividing EVA / PlayOut * 100 so we get a percentage
+int winning();
+int GetValue(int t);
+int AIManager();
+int NegaMax(int Depth);
+void clean()
+{
+	provocation = false;
+	for (int i = 0; i <= 60; i++)
+		input[i] = ' ';
+}
+int GetValue(int column)
+{
+	// pass this function a column that you want to play in and it will return its value in input array ..
+	if (column > 7)
+		return 0;
+	int n;
+	for (int i = 0; i <= 6; i++)
+	{
+		if (input[column + 7 * i] == ' ')
+		{
+			n = column + 7 * i;
+			break;
+		}
+	}
+	if (n > 42 )
+		return 0;
+	return n;
+}
+
+int winning()
+{
+	// Winning algorithm
+	int temp = 0;
+	for (int i = 1; i <= 42; i++)
+	{
+		if (input[i] != ' ')
+		{
+			temp++;
+			if (i - int((i - 1) / 7) * 7 <= 4)
+			{
+				if (input[i] == input[i + 1] && input[i] == input[i + 2] && input[i] == input[i + 3])
+				{
+					if (input[i] == 'X')
+						return 1;
+					else
+						return 2;
+				}
+			}
+			if (i <= 21)
+			{
+				if (input[i] == input[i + 7] && input[i] == input[i + 14] && input[i] == input[i + 21])
+				{
+					if (input[i] == 'X')
+						return 1;
+					else
+						return 2;
+				}
+			}
+			if (i - int((i - 1) / 7) * 7 <= 4 && i <= 18)
+			{
+				if (input[i] == input[i + 8] && input[i] == input[i + 16] && input[i] == input[i + 24])
+				{
+					if (input[i] == 'X')
+						return 1;
+					else
+						return 2;
+				}
+			}
+			if (i - int((i - 1) / 7) * 7 >= 4 && i <= 21)
+			{
+				if (input[i] == input[i + 6] && input[i] == input[i + 12] && input[i] == input[i + 18])
+				{
+					if (input[i] == 'X')
+						return 1;
+					else
+						return 2;
+				}
+			}
+		}
+	}
+	if (temp == 42)
+		return 3;
+	return 0;
+}
+void Board()
+{ // Draw board
+	system("clear");
+	cout << endl
+		 << "    1   "
+		 << "    2   "
+		 << "    3   "
+		 << "    4   "
+		 << "    5   "
+		 << "    6   "
+		 << "    7   " << endl;
+
+		for( int i=17 ; i>=0 ; i-- )//x
+		{
+			if(i%3==2)
+				cout << BAR_COLOR << string(57, '-') << RESET<<endl;
+
+			for(int j=1 ; j<=7 ; j++)
+			{
+				if(input[i/3 * 7+j] == 'X')
+				{
+					if(i%3==1)
+						cout << BAR_COLOR << "|" << RESET <<X_COLOR << "   " << input[i/3 * 7+j] << "   "<<RESET ;
+					else
+						cout << BAR_COLOR << "|" << RESET <<X_COLOR << "   " << " "<< "   "<<RESET ;
+					
+				}
+				else if(input[i/3 * 7+j] == 'O')
+				{
+					if(i%3==1)
+						cout << BAR_COLOR << "|" << RESET <<O_COLOR << "   " << input[i/3 * 7+j] << "   "<<RESET ;
+					else
+						cout << BAR_COLOR << "|" << RESET <<O_COLOR << "   " << " "<< "   "<<RESET ;
+					
+				}
+				else	
+					cout << BAR_COLOR << "|" << RESET << "   " << input[i/3 * 7+j] << "   ";
+			}
+			cout << BAR_COLOR << "|" << RESET<<endl;
+			
+		}
+		cout << BAR_COLOR << string(57, '-') << RESET<<endl;
+
+		cout
+		 << "    1   "
+		 << "    2   "
+		 << "    3   "
+		 << "    4   "
+		 << "    5   "
+		 << "    6   "
+		 << "    7   " << endl;
+
+/*
+	int j = 42;
+	for (int i = 0; i <= 23; i++)
+	{
+		if (i % 4 == 0)
+			cout << BLUE << string(57, '-') << RESET;
+		else
+		{
+			if ((i - 2) % 4 == 0)
+			{
+				j = 42 - (0.25 * i + 0.5) * 6 - ((0.25 * i + 0.5) - 1);
+				for (int i = 0; i <= 6; i++)
+				{
+					if(input[j]=='O')
+					cout << BLUE << "|" << RESET << "   " << RED <<input[j] <<RESET << "   ";
+					else if(input[j]=='X')
+					cout << BLUE << "|" << RESET << "   " << YELLOW <<input[j] <<RESET << "   ";
+					else
+					{
+						cout << BLUE << "|" << RESET << "   " << input[j] << "   ";
+					}
+					
+					j++;
+				}
+				cout << BLUE << "|" << RESET;
+			}
+			else
+			{
+				for (int i = 0; i <= 6; i++)
+					cout << BLUE << "|" << RESET << string(7, ' ');
+				cout << BLUE << "|" << RESET;
+			}
+		}
+		cout << endl;
+	}
+	cout << BLUE << string(57, '-') << RESET;
+*/
+	
+}
+
+void PlayPosition(char XO)
+{
+	// Function that asks you to enter where you like to play. It prints ERROR if the position is
+	// not allowed
+	while (true)
+	{
+	int sth;
+	cout << endl
+		 << "Where would you like to play." << endl;
+	cout << "You are \"" << XO << "\" " << endl;
+	cout << "Your choice:";
+	cin >> sth;
+	sth = GetValue(sth);
+	if (sth != 0)
+	{
+		input[sth] = XO;
+		Board();
+			cout << endl<< "Queen thinking...\n" << endl;
+		return;
+	}
+	else
+	{
+		Board();
+		cout << "ERROR please input again." << endl;
+	}
+	}
+}
+
+int main()
+{ // main function
+	srand(time(0));
+	cout << "I'm Queen of connect four."<<endl;
+	int one_more = 1;
+	while (one_more)
+	{
+		clean();
+		cout << "Choose game level:"
+		<< " Eazy (1) " << " Hard (2) " << " Hard as shit (3)\n"<<"Your choice:";
+		cin >> Level;
+		Level+=4;
+		bool go_first;
+		cout << "Do you want to go first? Yes(1)/No(0)" << endl;
+		cin >> go_first;
+
+		if (go_first)
+		{
+			Board();
+			PlayPosition('X'); // add this if player want to go first
+		}
+		else
+		{
+			Board();
+			cout << endl<< "Queen thinking...\n" << endl;
+		}
+		
+		while (1)
+		{
+			input[AIManager()] = 'O';
+			int winningtemp = winning();
+			if (winningtemp != 0)
+			{
+				if (winningtemp == 1)
+				{
+					Board();
+					cout << endl
+						 << "You WON ! Unbelievable !"<<endl;
+					cout << "One more Play? Yes(1)/No(0)";
+					cin>>one_more;
+					break;
+				}
+				else if (winningtemp == 2)
+				{
+					Board();
+					cout << endl 
+						 << "The Queen WON ! "<<endl;
+					cout << "One more Play? Yes(1)/No(0)"<<endl<<"Your choice:";
+					cin>>one_more;
+					break;
+				}
+				else if (winningtemp == 3)
+				{
+					Board();
+					cout << "Game Tie ! "<<endl;
+					cout << "One more Play? Yes(1)/No(0)"<<endl<<"Your choice:";
+					cin>>one_more;
+					break;
+				}
+				//char eat = getchar(); //-----------------------------------
+				clean();
+			}
+			else
+			{
+				Board();
+				if (provocation == true)
+				{
+					cout << endl
+					 << "Hehe I'm sure of my winning :D " << endl;
+				}
+				PlayPosition('X');
+			}
+		}
+	}
+}
+int AIManager()
+{ // AI Algorithm
+	float chance[2] = {9999999, 0};
+	for (int column = 1; column <= 7; column++)
+	{
+		PlayOut = 0;
+		EVA = 0;
+		int PlayNumber = GetValue(column);
+		if (PlayNumber != 0)
+		{
+			input[PlayNumber] = 'O';
+			if (winning() == 2)
+			{
+				input[PlayNumber] = ' ';
+				return PlayNumber;
+			}
+			float temp = -(100 * NegaMax(1));
+			if (PlayOut != 0)
+				temp -= ((100 * EVA) / PlayOut);
+			// Queen 100% win
+			if (-temp >= 100)
+				provocation = true;
+			if (chance[0] > temp)
+			{
+				chance[0] = temp;
+				chance[1] = PlayNumber;
+			}
+			//cout<<endl<<-temp<<"   "<<EVA << "   " <<PlayOut;//the value of each move ------
+			input[PlayNumber] = ' ';
+		}
+	}
+	return chance[1];
+}
+int NegaMax(int Depth)
+{ // MiniMax algorithm in NegaMax form
+	char XO;
+	int PlayNumber[8] = {0, 0, 0, 0, 0, 0, 0, 0}; // The values of the input[] for every column
+	int chance = 0;
+	if (Depth % 2 != 0)
+		XO = 'X';
+	else
+		XO = 'O';
+
+	for (int column = 1; column <= 7; column++)
+		PlayNumber[column] = GetValue(column);
+
+	for (int column = 1; column <= 7; column++)
+	{
+		if (PlayNumber[column] != 0)
+		{
+			input[PlayNumber[column]] = XO;
+			if (winning() != 0)
+			{
+				PlayOut++;
+				if (XO == 'O')
+					EVA++;
+				else
+					EVA--;
+				input[PlayNumber[column]] = ' ';
+				return -1;
+			}
+			input[PlayNumber[column]] = ' ';
+		}
+	}
+	if (Depth <= Level)
+	{
+		for (int column = 1; column <= 7; column++)
+		{
+			int temp = 0;
+			if (PlayNumber[column] != 0)
+			{
+				input[PlayNumber[column]] = XO;
+				if (winning() != 0)
+				{
+					PlayOut++;
+					if (XO == 'O')
+						EVA++;
+					else
+						EVA--;
+					input[PlayNumber[column]] = ' ';
+					return -1;
+				}
+				temp = NegaMax(Depth + 1);
+				if (column == 1)
+					chance = temp;
+				if (chance < temp)
+					chance = temp;
+				input[PlayNumber[column]] = ' ';
+			}
+		}
+	}
+	return -chance;
+}
